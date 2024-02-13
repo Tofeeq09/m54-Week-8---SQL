@@ -486,6 +486,52 @@ const getAllBooksFromAuthor = async (req, res) => {
   }
 };
 
+const updateAuthorNameForAllBooks = async (req, res) => {
+  try {
+    const [updatedCount, updatedBooks] = await Book.update(
+      { author: req.body.author },
+      { where: { author: req.params.author }, returning: true }
+    );
+
+    if (updatedCount === 0) {
+      res.status(404).json({
+        error: {
+          handler: "updateAuthorNameForAllBooks",
+          message: "No books found from this author",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: {
+        handler: "updateAuthorNameForAllBooks",
+        message: `${updatedCount} books updated`,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: updatedBooks,
+      },
+    });
+  } catch (error) {
+    console.log("Error updating books: ", error);
+    res.status(500).json({
+      error: {
+        handler: "updateAuthorNameForAllBooks",
+        message: "Error updating books",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
 const getAllGenres = async (req, res) => {
   try {
     const books = await Book.findAll({
@@ -535,6 +581,49 @@ const getAllGenres = async (req, res) => {
   }
 };
 
+const getAllBooksFromGenre = async (req, res) => {
+  try {
+    const books = await Book.findAll({ where: { genre: req.params.genre } });
+
+    if (books.length === 0) {
+      res.status(404).json({
+        error: {
+          handler: "getAllBooksFromGenre",
+          message: "No books found for this genre",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: {
+        handler: "getAllBooksFromGenre",
+        message: "Books retrieved successfully",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: books,
+      },
+    });
+  } catch (error) {
+    console.log("Error retrieving books: ", error);
+    res.status(500).json({
+      error: {
+        handler: "getAllBooksFromGenre",
+        message: "Error retrieving books",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addBooks,
@@ -546,10 +635,10 @@ module.exports = {
   deleteBookByTitle,
   getAllAuthors,
   getAllBooksFromAuthor,
-  //   updateAuthorNameForAllBooks,
+  updateAuthorNameForAllBooks,
   //   deleteAllBooksByAuthor,
   getAllGenres,
-  //   getAllBooksFromGenre,
+  getAllBooksFromGenre,
   //   updateGenreForAllBooks,
   //   deleteAllBooksByGenre,
   //   getBookById,
