@@ -3,7 +3,6 @@ require("dotenv").config();
 const express = require("express");
 
 // Internal Module Imports - From files within the project.
-// const sequelize = require("./db/connection"); // From the connection.js file
 const bookRouter = require("./books/routes"); // From the routes.js file
 const Book = require("./books/model"); // From the model.js file.
 
@@ -14,6 +13,9 @@ const port = process.env.PORT || 5000;
 // Middleware - To parse the request body as JSON.
 app.use(express.json());
 
+// Routes - Mount the bookRouter on the "/books" path.
+app.use("/books", bookRouter);
+
 // A async function to sync the tables. This will create the tables if they do not exist.
 const syncTables = async () => {
   await Book.sync();
@@ -23,9 +25,6 @@ const syncTables = async () => {
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is running" });
 });
-
-// Routes - Mount the bookRouter on the "/books" path.
-app.use("/books", bookRouter);
 
 // Server - Start the server on the specified port.
 app.listen(port, () => {
