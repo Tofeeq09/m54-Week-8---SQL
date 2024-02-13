@@ -118,8 +118,8 @@ const getAllOrQueryBooks = async (req, res) => {
 
 const deleteAllBooks = async (req, res) => {
   try {
-    const result = await Book.destroy({ where: {} });
-    if (result === 0) {
+    const booksToDelete = await Book.findAll({ where: {} });
+    if (booksToDelete.length === 0) {
       res.status(404).json({
         error: {
           handler: "deleteAllBooks",
@@ -131,6 +131,8 @@ const deleteAllBooks = async (req, res) => {
       });
       return;
     }
+
+    const result = await Book.destroy({ where: {} });
     res.status(200).json({
       success: {
         handler: "deleteAllBooks",
@@ -138,7 +140,7 @@ const deleteAllBooks = async (req, res) => {
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
         timestamp: new Date().toISOString(),
-        data: { deletedCount: result },
+        data: { deletedCount: result, deletedBooks: booksToDelete },
       },
     });
   } catch (error) {
