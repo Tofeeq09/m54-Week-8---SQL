@@ -29,8 +29,8 @@ const {
 // Controller Functions - Define the route handlers.
 bookRouter.post("/", addBooks);
 bookRouter.get("/", getAllOrQueryBooks);
-// bookRouter.delete("/", deleteAllBooks);
-// bookRouter.get("/title", getAllTitles);
+bookRouter.delete("/", deleteAllBooks);
+bookRouter.get("/title", getAllTitles);
 // bookRouter.get("/title/:title", getBookByTitle);
 // bookRouter.put("/title/:title", UpdateAllFieldsByTitle);
 // bookRouter.delete("/title/:title", deleteBookByTitle);
