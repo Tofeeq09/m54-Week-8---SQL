@@ -15,11 +15,11 @@ const {
   deleteBookByTitle,
   getAllAuthors,
   getAllBooksFromAuthor,
-  updateAuthorNameForAllBooks,
+  updateAuthorForAllBooksOfSpecificAuthor,
   deleteAllBooksByAuthor,
   getAllGenres,
   getAllBooksFromGenre,
-  updateGenreForAllBooks,
+  updateGenreForAllBooksOfSpecificGenre,
   deleteAllBooksByGenre,
   getBookById,
   updateBookById,
@@ -36,11 +36,11 @@ bookRouter.put("/title/:title", dynamicallyUpdateByTitle);
 bookRouter.delete("/title/:title", deleteBookByTitle);
 bookRouter.get("/author", getAllAuthors);
 bookRouter.get("/author/:author", getAllBooksFromAuthor);
-bookRouter.put("/author/:author", updateAuthorNameForAllBooks);
+bookRouter.put("/author/:author", updateAuthorForAllBooksOfSpecificAuthor);
 bookRouter.delete("/author/:author", deleteAllBooksByAuthor);
 bookRouter.get("/genre", getAllGenres);
 bookRouter.get("/genre/:genre", getAllBooksFromGenre);
-// bookRouter.put("/genre/:genre", updateGenreForAllBooks);
+bookRouter.put("/genre/:genre", updateGenreForAllBooksOfSpecificGenre);
 bookRouter.delete("/genre/:genre", deleteAllBooksByGenre);
 // bookRouter.get("/:id", getBookById);
 // bookRouter.put("/:id", updateBookById);
