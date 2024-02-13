@@ -530,7 +530,10 @@ const updateAuthorNameForAllBooks = async (req, res) => {
           method: req.method,
           url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
           timestamp: new Date().toISOString(),
-          data: { beforeUpdate: currentBooks },
+          data: {
+            oldGenre: req.params.genre,
+            newGenre: req.body.genre,
+          },
         },
       });
       return;
@@ -546,8 +549,7 @@ const updateAuthorNameForAllBooks = async (req, res) => {
         data: {
           oldAuthor: req.params.author,
           newAuthor: req.body.author,
-          beforeUpdate: currentBooks,
-          afterUpdate: updatedBooks,
+          booksUpdated: updatedBooks.map((book) => book.title),
         },
       },
     });
@@ -767,6 +769,92 @@ const deleteAllBooksByGenre = async (req, res) => {
   }
 };
 
+const updateGenreForAllBooks = async (req, res) => {
+  try {
+    // Fetch the current state of the book
+    const currentBooks = await Book.findAll({
+      where: { genre: req.params.genre },
+    });
+
+    if (!currentBooks.length) {
+      res.status(404).json({
+        error: {
+          handler: "updateGenreForAllBooks",
+          message: "No books found from this genre",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    // Perform the update
+    await Book.update(
+      { genre: req.body.genre },
+      { where: { genre: req.params.genre } }
+    );
+
+    // Fetch the updated state of the book
+    const updatedBooks = await Book.findAll({
+      where: { genre: req.body.genre },
+    });
+
+    const fieldsToCheck = ["genre"];
+    if (
+      fieldsToCheck.every(
+        (field) => currentBooks[0][field] === updatedBooks[0][field]
+      )
+    ) {
+      res.status(304).json({
+        error: {
+          handler: "updateGenreForAllBooks",
+          message: "No changes detected. Books not updated.",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+          data: {
+            oldGenre: req.params.genre,
+            newGenre: req.body.genre,
+          },
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: {
+        handler: "updateGenreForAllBooks",
+        message: `${updatedBooks.length} books updated`,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: {
+          oldGenre: req.params.genre,
+          newGenre: req.body.genre,
+          booksUpdated: updatedBooks.map((book) => book.title),
+        },
+      },
+    });
+  } catch (error) {
+    console.log(
+      `Error in 'updateGenreForAllBooks' on request ${req.method} ${req.originalUrl}: `,
+      error
+    );
+    res.status(500).json({
+      error: {
+        handler: "updateGenreForAllBooks",
+        message: "Error updating books",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addBooks,
@@ -782,7 +870,7 @@ module.exports = {
   deleteAllBooksByAuthor,
   getAllGenres,
   getAllBooksFromGenre,
-  //   updateGenreForAllBooks,
+  updateGenreForAllBooks,
   deleteAllBooksByGenre,
   //   getBookById,
   //   updateBookById,
