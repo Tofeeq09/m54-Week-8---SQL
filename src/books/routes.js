@@ -33,7 +33,7 @@ bookRouter.delete("/", deleteAllBooks);
 bookRouter.get("/title", getAllTitles);
 bookRouter.get("/title/:title", getBookByTitle);
 bookRouter.put("/title/:title", dynamicallyUpdateByTitle);
-// bookRouter.delete("/title/:title", deleteBookByTitle);
+bookRouter.delete("/title/:title", deleteBookByTitle);
 bookRouter.get("/author", getAllAuthors);
 // bookRouter.get("/author/:author", getAllBooksFromAuthor);
 // bookRouter.put("/author/:author", updateAuthorNameForAllBooks);
