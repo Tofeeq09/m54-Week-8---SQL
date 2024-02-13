@@ -443,6 +443,49 @@ const getAllAuthors = async (req, res) => {
   }
 };
 
+const getAllBooksFromAuthor = async (req, res) => {
+  try {
+    const books = await Book.findAll({ where: { author: req.params.author } });
+
+    if (books.length === 0) {
+      res.status(404).json({
+        error: {
+          handler: "getAllBooksFromAuthor",
+          message: "No books found from this author",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: {
+        handler: "getAllBooksFromAuthor",
+        message: "Books retrieved successfully",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: books,
+      },
+    });
+  } catch (error) {
+    console.log("Error retrieving books: ", error);
+    res.status(500).json({
+      error: {
+        handler: "getAllBooksFromAuthor",
+        message: "Error retrieving books",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
 const getAllGenres = async (req, res) => {
   try {
     const books = await Book.findAll({
@@ -502,7 +545,7 @@ module.exports = {
   dynamicallyUpdateByTitle,
   deleteBookByTitle,
   getAllAuthors,
-  //   getAllBooksFromAuthor,
+  getAllBooksFromAuthor,
   //   updateAuthorNameForAllBooks,
   //   deleteAllBooksByAuthor,
   getAllGenres,
