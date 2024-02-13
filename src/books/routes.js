@@ -11,7 +11,7 @@ const {
   deleteAllBooks,
   getAllTitles,
   getBookByTitle,
-  UpdateAllFieldsByTitle,
+  dynamicallyUpdateByTitle,
   deleteBookByTitle,
   getAllAuthors,
   getAllBooksFromAuthor,
@@ -32,13 +32,13 @@ bookRouter.get("/", getAllOrQueryBooks);
 bookRouter.delete("/", deleteAllBooks);
 bookRouter.get("/title", getAllTitles);
 // bookRouter.get("/title/:title", getBookByTitle);
-// bookRouter.put("/title/:title", UpdateAllFieldsByTitle);
+bookRouter.put("/title/:title", dynamicallyUpdateByTitle);
 // bookRouter.delete("/title/:title", deleteBookByTitle);
-// bookRouter.get("/author", getAllAuthors);
+bookRouter.get("/author", getAllAuthors);
 // bookRouter.get("/author/:author", getAllBooksFromAuthor);
 // bookRouter.put("/author/:author", updateAuthorNameForAllBooks);
 // bookRouter.delete("/author/:author", deleteAllBooksByAuthor);
-// bookRouter.get("/genre", getAllGenres);
+bookRouter.get("/genre", getAllGenres);
 // bookRouter.get("/genre/:genre", getAllBooksFromGenre);
 // bookRouter.put("/genre/:genre", updateGenreForAllBooks);
 // bookRouter.delete("/genre/:genre", deleteAllBooksByGenre);
