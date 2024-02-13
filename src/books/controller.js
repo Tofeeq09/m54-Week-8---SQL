@@ -488,12 +488,12 @@ const getAllBooksFromAuthor = async (req, res) => {
 
 const updateAuthorNameForAllBooks = async (req, res) => {
   try {
-    const [updatedCount, updatedBooks] = await Book.update(
-      { author: req.body.author },
-      { where: { author: req.params.author }, returning: true }
-    );
+    // Fetch the current state of the book
+    const currentBooks = await Book.findAll({
+      where: { author: req.params.author },
+    });
 
-    if (updatedCount === 0) {
+    if (!currentBooks.length) {
       res.status(404).json({
         error: {
           handler: "updateAuthorNameForAllBooks",
@@ -506,18 +506,56 @@ const updateAuthorNameForAllBooks = async (req, res) => {
       return;
     }
 
+    // Perform the update
+    await Book.update(
+      { author: req.body.author },
+      { where: { author: req.params.author } }
+    );
+
+    // Fetch the updated state of the book
+    const updatedBooks = await Book.findAll({
+      where: { author: req.body.author },
+    });
+
+    const fieldsToCheck = ["author"];
+    if (
+      fieldsToCheck.every(
+        (field) => currentBooks[0][field] === updatedBooks[0][field]
+      )
+    ) {
+      res.status(304).json({
+        error: {
+          handler: "updateAuthorNameForAllBooks",
+          message: "No changes detected. Books not updated.",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+          data: { beforeUpdate: currentBooks },
+        },
+      });
+      return;
+    }
+
     res.status(200).json({
       success: {
         handler: "updateAuthorNameForAllBooks",
-        message: `${updatedCount} books updated`,
+        message: `${updatedBooks.length} books updated`,
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
         timestamp: new Date().toISOString(),
-        data: updatedBooks,
+        data: {
+          oldAuthor: req.params.author,
+          newAuthor: req.body.author,
+          beforeUpdate: currentBooks,
+          afterUpdate: updatedBooks,
+        },
       },
     });
   } catch (error) {
-    console.log("Error updating books: ", error);
+    console.log(
+      `Error in 'updateAuthorNameForAllBooks' on request ${req.method} ${req.originalUrl}: `,
+      error
+    );
     res.status(500).json({
       error: {
         handler: "updateAuthorNameForAllBooks",
@@ -745,7 +783,7 @@ module.exports = {
   getAllGenres,
   getAllBooksFromGenre,
   //   updateGenreForAllBooks,
-  //   deleteAllBooksByGenre,
+  deleteAllBooksByGenre,
   //   getBookById,
   //   updateBookById,
   //   deleteBookById,

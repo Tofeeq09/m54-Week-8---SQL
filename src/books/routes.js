@@ -41,7 +41,7 @@ bookRouter.delete("/author/:author", deleteAllBooksByAuthor);
 bookRouter.get("/genre", getAllGenres);
 bookRouter.get("/genre/:genre", getAllBooksFromGenre);
 // bookRouter.put("/genre/:genre", updateGenreForAllBooks);
-// bookRouter.delete("/genre/:genre", deleteAllBooksByGenre);
+bookRouter.delete("/genre/:genre", deleteAllBooksByGenre);
 // bookRouter.get("/:id", getBookById);
 // bookRouter.put("/:id", updateBookById);
 // bookRouter.delete("/:id", deleteBookById);
