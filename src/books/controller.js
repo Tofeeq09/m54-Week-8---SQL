@@ -14,19 +14,35 @@ const addBooks = async (req, res) => {
         }))
       );
       const bookTitles = newBooks.map((book) => book.title).join(", ");
-      res
-        .status(201)
-        .json({ message: `Books added: ${bookTitles}`, books: newBooks });
+
+      res.status(201).json({
+        success: {
+          handler: "addBooks",
+          message: `Books added: ${bookTitles}`,
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+          data: newBooks,
+        },
+      });
       return;
     }
+
     const newBook = await Book.create({
       title: req.body.title,
       author: req.body.author,
       genre: req.body.genre,
     });
-    res
-      .status(201)
-      .json({ message: `Book added: ${req.body.title}`, book: newBook });
+    res.status(201).json({
+      success: {
+        handler: "addBooks",
+        message: `Book added: ${req.body.title}`,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: newBook,
+      },
+    });
   } catch (error) {
     console.log(
       `Error in 'addBooks' on request ${req.method} ${req.originalUrl}: `,
@@ -51,7 +67,15 @@ const getAllOrQueryBooks = async (req, res) => {
     const books = await Book.findAll({ where: req.query });
 
     if (!books.length) {
-      res.status(404).json({ message: "No books found" });
+      res.status(404).json({
+        error: {
+          handler: "getAllOrQueryBooks",
+          message: "No books found",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
       return;
     }
 
@@ -61,9 +85,17 @@ const getAllOrQueryBooks = async (req, res) => {
     }
 
     res.status(200).json({
-      message: message,
-      query: req.query,
-      books: books,
+      success: {
+        handler: "getAllOrQueryBooks",
+        message: message,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: {
+          query: req.query,
+          books: books,
+        },
+      },
     });
   } catch (error) {
     console.log(
@@ -89,12 +121,25 @@ const deleteAllBooks = async (req, res) => {
     const result = await Book.destroy({ where: {} });
     if (result === 0) {
       res.status(404).json({
-        message: "No books found to delete. The database is already empty.",
+        error: {
+          handler: "deleteAllBooks",
+          message: "No books found to delete. The database is already empty.",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
       });
       return;
     }
     res.status(200).json({
-      message: `${result} books deleted. The database is now empty.`,
+      success: {
+        handler: "deleteAllBooks",
+        message: `${result} books deleted. The database is now empty.`,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: { deletedCount: result },
+      },
     });
   } catch (error) {
     console.log(
@@ -109,7 +154,7 @@ const deleteAllBooks = async (req, res) => {
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
         errorMessage: error.message,
         stack: error.stack,
-        timestamp: new Date().toISOString(), // Include the timestamp
+        timestamp: new Date().toISOString(),
       },
     });
   }
@@ -125,11 +170,26 @@ const getAllTitles = async (req, res) => {
 
     if (!titles.length) {
       res.status(404).json({
-        message: "No books found with that title",
+        error: {
+          handler: "getAllTitles",
+          message: "No books found with that title",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
       });
       return;
     }
-    res.status(200).json(titles);
+    res.status(200).json({
+      success: {
+        handler: "getAllTitles",
+        message: "Titles fetched successfully",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: titles,
+      },
+    });
   } catch (error) {
     console.log(
       `Error in 'getAllTitles' on request ${req.method} ${req.originalUrl}: `,
@@ -139,6 +199,42 @@ const getAllTitles = async (req, res) => {
       error: {
         handler: "getAllTitles",
         message: "Error getting titles",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
+const getBookByTitle = async (req, res) => {
+  try {
+    const book = await Book.findOne({ where: { title: req.params.title } });
+    if (!book) {
+      res.status(404).json({ message: "Book not found" });
+      return;
+    }
+    res.status(200).json({
+      success: {
+        handler: "getBookByTitle",
+        message: "Book retrieved successfully",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: book,
+      },
+    });
+  } catch (error) {
+    console.log(
+      `Error in 'getBookByTitle' on request ${req.method} ${req.originalUrl}: `,
+      error
+    );
+    res.status(500).json({
+      error: {
+        handler: "getBookByTitle",
+        message: "Error getting book",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
         errorMessage: error.message,
@@ -289,7 +385,7 @@ module.exports = {
   getAllOrQueryBooks,
   deleteAllBooks,
   getAllTitles,
-  //   getBookByTitle,
+  getBookByTitle,
   dynamicallyUpdateByTitle,
   //   deleteBookByTitle,
   getAllAuthors,
