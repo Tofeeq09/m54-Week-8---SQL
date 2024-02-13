@@ -532,6 +532,58 @@ const updateAuthorNameForAllBooks = async (req, res) => {
   }
 };
 
+const deleteAllBooksByAuthor = async (req, res) => {
+  try {
+    const booksToDelete = await Book.findAll({
+      where: {
+        author: req.params.author,
+      },
+    });
+
+    if (!booksToDelete.length) {
+      res.status(404).json({
+        error: {
+          handler: "deleteAllBooksByAuthor",
+          message: "No books found from this author",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    await Book.destroy({
+      where: {
+        author: req.params.author,
+      },
+    });
+
+    res.status(200).json({
+      success: {
+        handler: "deleteAllBooksByAuthor",
+        message: `${booksToDelete.length} books deleted`,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: booksToDelete,
+      },
+    });
+  } catch (error) {
+    console.log("Error deleting books: ", error);
+    res.status(500).json({
+      error: {
+        handler: "deleteAllBooksByAuthor",
+        message: "Error deleting books",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
 const getAllGenres = async (req, res) => {
   try {
     const books = await Book.findAll({
@@ -624,6 +676,59 @@ const getAllBooksFromGenre = async (req, res) => {
   }
 };
 
+const deleteAllBooksByGenre = async (req, res) => {
+  try {
+    const booksToDelete = await Book.findAll({
+      where: {
+        genre: req.params.genre,
+      },
+    });
+
+    if (!booksToDelete.length) {
+      res.status(404).json({
+        error: {
+          handler: "deleteAllBooksByGenre",
+          message: "No books found for this genre",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    await Book.destroy({
+      where: {
+        genre: req.params.genre,
+      },
+    });
+
+    res.status(200).json({
+      success: {
+        handler: "deleteAllBooksByGenre",
+        message: `${booksToDelete.length} books deleted`,
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: booksToDelete,
+      },
+    });
+  } catch (error) {
+    console.log("Error deleting books: ", error);
+    res.status(500).json({
+      error: {
+        handler: "deleteAllBooksByGenre",
+        message: "Error deleting books",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addBooks,
@@ -636,7 +741,7 @@ module.exports = {
   getAllAuthors,
   getAllBooksFromAuthor,
   updateAuthorNameForAllBooks,
-  //   deleteAllBooksByAuthor,
+  deleteAllBooksByAuthor,
   getAllGenres,
   getAllBooksFromGenre,
   //   updateGenreForAllBooks,
