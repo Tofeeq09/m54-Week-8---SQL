@@ -38,11 +38,11 @@ const getAllOrQueryBooks = async (req, res) => {
 
     // If no query req.query will be an empty object. Object.keys(req.query) will return an empty array, and Object.keys(req.query).length will return 0
     // 0 is considered a "falsy" value, which means it's treated as false in a boolean context
-    const message = Object.keys(req.query).length
-      ? "Filtered books"
-      : "All books";
-
-    res.status(200).json({ message: message, books: books });
+    res.status(200).json({
+      message: Object.keys(req.query).length ? "Filtered books" : "All books",
+      query: req.query,
+      books: books,
+    });
   } catch (error) {
     console.log("Error fetching books: ", error);
     res
