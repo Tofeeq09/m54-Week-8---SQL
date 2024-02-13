@@ -86,7 +86,6 @@ const getAllOrQueryBooks = async (req, res) => {
 
 const deleteAllBooks = async (req, res) => {
   try {
-    throw new Error("This is a test error");
     const result = await Book.destroy({ where: {} });
     if (result === 0) {
       res.status(404).json({
@@ -180,6 +179,17 @@ const dynamicallyUpdateByTitle = async (req, res) => {
     const updatedBook = await Book.findOne({
       where: { title: req.body.title },
     });
+
+    const fieldsToCheck = ["title", "author", "genre"];
+    if (
+      fieldsToCheck.every((field) => currentBook[field] === updatedBook[field])
+    ) {
+      res.status(404).json({
+        message: "No changes detected. Book not updated.",
+        beforeUpdate: currentBook,
+      });
+      return;
+    }
 
     res.status(200).json({
       message: "Book updated successfully",
