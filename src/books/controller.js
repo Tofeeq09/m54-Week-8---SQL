@@ -9,8 +9,8 @@ const addBooks = async (req, res) => {
       const newBooks = await Book.bulkCreate(
         req.body.map((book) => ({
           title: book.title,
-          author: book.author,
-          genre: book.genre,
+          AuthorId: book.AuthorId,
+          GenreId: book.GenreId,
         }))
       );
       const bookTitles = newBooks.map((book) => book.title).join(", ");
@@ -30,8 +30,8 @@ const addBooks = async (req, res) => {
 
     const newBook = await Book.create({
       title: req.body.title,
-      author: req.body.author,
-      genre: req.body.genre,
+      AuthorId: req.body.AuthorId,
+      GenreId: req.body.GenreId,
     });
     res.status(201).json({
       success: {
@@ -64,7 +64,11 @@ const addBooks = async (req, res) => {
 
 const getAllOrQueryBooks = async (req, res) => {
   try {
-    const books = await Book.findAll({ where: req.query });
+    const books = await Book.findAll({
+      where: req.query,
+      attributes: { exclude: ["GenreId", "AuthorId"] },
+      include: ["Author", "Genre"],
+    });
 
     if (!books.length) {
       res.status(404).json({
@@ -149,7 +153,7 @@ const deleteAllBooks = async (req, res) => {
       error
     );
     res.status(500).json({
-      error: {
+      message: {
         handler: "deleteAllBooks",
         message: "Error deleting books",
         method: req.method,
@@ -158,6 +162,7 @@ const deleteAllBooks = async (req, res) => {
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
+      error: error,
     });
   }
 };

@@ -3,8 +3,12 @@ require("dotenv").config();
 const express = require("express");
 
 // Internal Module Imports - From files within the project.
-const bookRouter = require("./books/routes"); // From the routes.js file
-const Book = require("./books/model"); // From the model.js file.
+const bookRouter = require("./books/routes"); // From the books/routes.js file.
+const Book = require("./books/model"); // From the books/model.js file.
+const genreRouter = require("./genres/routes"); // From the genres/routes.js file.
+const Genre = require("./genres/model"); // From the genres/model.js file.
+const authorRouter = require("./authors/routes"); // From the authors/routes.js file.
+const Author = require("./authors/model"); // From the authors/model.js file.
 
 // port - The port number on which the server will run or the default port number 5000.
 const app = express();
@@ -15,10 +19,31 @@ app.use(express.json());
 
 // Routes - Mount the bookRouter on the "/books" path.
 app.use("/books", bookRouter);
+// Routes - Mount the genreRouter on the "/genres" path.
+app.use("/genres", genreRouter);
+// Routes - Mount the authorRouter on the "/authors" path.
+app.use("/authors", authorRouter);
 
-// A async function to sync the tables. This will create the tables if they do not exist.
+// A async function to sync the tables in the database.
 const syncTables = async () => {
+  // Define relationships between the tables.
+  Genre.hasOne(Book);
+  Book.belongsTo(Genre);
+  Book.hasMany(Genre);
+
+  Author.hasOne(Book);
+  Book.belongsTo(Author);
+  Book.hasMany(Author);
+
+  Genre.sync();
+  Author.sync();
+  Book.sync();
+
+  // The sync() method in Sequelize is used to synchronize all defined models to the database.
+  // When called on a specific model like Book, it creates the table if it doesn't exist, and does nothing if it already exists.
   await Book.sync();
+  await Genre.sync();
+  await Author.sync();
 };
 
 // The health check endpoint to check if the server is running.

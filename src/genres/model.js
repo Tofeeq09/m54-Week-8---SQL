@@ -4,11 +4,11 @@ const { DataTypes } = require("sequelize"); // DataTypes class from the "sequeli
 // Internal Module Imports - From files within the project.
 const sequelize = require("../db/connection"); // Import the sequelize connection from the connection.js file.
 
-// Define the Book model with the sequelize.define() method.
-const Book = sequelize.define(
-  "Book",
+// Define the Genre model with the sequelize.define() method.
+const Genre = sequelize.define(
+  "Genre",
   {
-    title: {
+    genreName: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
@@ -17,5 +17,5 @@ const Book = sequelize.define(
   { timestamps: false } // Additional options for the model: Disable timestamps.
 );
 
-// Export the Book mongoose model so that it can be imported and used in controller.js.
-module.exports = Book;
+// Export the Genre mongoose model so that it can be imported and used in controller.js.
+module.exports = Genre;
