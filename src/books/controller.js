@@ -553,6 +553,7 @@ const updateAuthorForAllBooksOfSpecificAuthor = async (req, res) => {
           oldAuthor: req.params.author,
           newAuthor: req.body.author,
           booksUpdated: updatedBooks.map((book) => book.title),
+          booksUpdated: updatedBooks.map((book) => book.title),
         },
       },
     });
