@@ -22,7 +22,7 @@ const {
   updateGenreForAllBooksOfSpecificGenre,
   deleteAllBooksByGenre,
   getBookById,
-  updateBookById,
+  dynamicallyUpdateById,
   deleteBookById,
 } = require("./controller"); //Controller Functions from controller.js
 
@@ -42,9 +42,9 @@ bookRouter.get("/genre", getAllGenres);
 bookRouter.get("/genre/:genre", getAllBooksFromGenre);
 bookRouter.put("/genre/:genre", updateGenreForAllBooksOfSpecificGenre);
 bookRouter.delete("/genre/:genre", deleteAllBooksByGenre);
-// bookRouter.get("/:id", getBookById);
-// bookRouter.put("/:id", updateBookById);
-// bookRouter.delete("/:id", deleteBookById);
+bookRouter.get("/:id", getBookById);
+bookRouter.put("/:id", dynamicallyUpdateById);
+bookRouter.delete("/:id", deleteBookById);
 
 // Export the bookRouter object so it can be imported and used in server.js.
 module.exports = bookRouter;

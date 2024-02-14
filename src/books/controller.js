@@ -303,7 +303,10 @@ const dynamicallyUpdateByTitle = async (req, res) => {
           method: req.method,
           url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
           timestamp: new Date().toISOString(),
-          data: { beforeUpdate: currentBook },
+          data: {
+            beforeUpdate: currentBook,
+            afterUpdate: updatedBook,
+          },
         },
       });
       return;
@@ -531,8 +534,8 @@ const updateAuthorForAllBooksOfSpecificAuthor = async (req, res) => {
           url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
           timestamp: new Date().toISOString(),
           data: {
-            oldGenre: req.params.genre,
-            newGenre: req.body.genre,
+            oldAuthor: req.params.genre,
+            newAuthor: req.body.genre,
           },
         },
       });
@@ -855,6 +858,177 @@ const updateGenreForAllBooksOfSpecificGenre = async (req, res) => {
   }
 };
 
+const getBookById = async (req, res) => {
+  try {
+    const book = await Book.findOne({ where: { id: req.params.id } });
+    if (!book) {
+      res.status(404).json({
+        error: {
+          handler: "getBookById",
+          message: "No book found with this id",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+    res.status(200).json({
+      success: {
+        handler: "getBookById",
+        message: "Book found",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: book,
+      },
+    });
+  } catch (error) {
+    console.log(
+      `Error in 'getBookById' on request ${req.method} ${req.originalUrl}: `,
+      error
+    );
+    res.status(500).json({
+      error: {
+        handler: "getBookById",
+        message: "Error getting book",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
+const dynamicallyUpdateById = async (req, res) => {
+  try {
+    // Fetch the current state of the book
+    const currentBook = await Book.findOne({
+      where: { id: req.params.id },
+    });
+
+    if (!currentBook) {
+      res.status(404).json({
+        error: {
+          handler: "dynamicallyUpdateById",
+          message: "Book not found",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    // Perform the update
+    await Book.update(req.body, {
+      where: { id: req.params.id },
+    });
+
+    // Fetch the updated state of the book
+    const updatedBook = await Book.findOne({
+      where: { id: req.params.id },
+    });
+
+    const fieldsToCheck = ["title", "author", "genre"];
+    if (
+      fieldsToCheck.every((field) => currentBook[field] === updatedBook[field])
+    ) {
+      res.status(304).json({
+        error: {
+          handler: "dynamicallyUpdateById",
+          message: "No changes detected. Book not updated.",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+          data: {
+            beforeUpdate: currentBook,
+            afterUpdate: updatedBook,
+          },
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: {
+        handler: "dynamicallyUpdateById",
+        message: "Book updated successfully",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: {
+          beforeUpdate: currentBook,
+          afterUpdate: updatedBook,
+        },
+      },
+    });
+  } catch (error) {
+    console.log(
+      `Error in 'dynamicallyUpdateById' on request ${req.method} ${req.originalUrl}: `,
+      error
+    );
+    res.status(500).json({
+      error: {
+        handler: "dynamicallyUpdateById",
+        message: "Error updating book",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
+const deleteBookById = async (req, res) => {
+  try {
+    const book = await Book.findOne({ where: { id: req.params.id } });
+    if (!book) {
+      res.status(404).json({
+        error: {
+          handler: "deleteBookById",
+          message: "No book found with this id",
+          method: req.method,
+          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+    await book.destroy();
+    res.status(200).json({
+      success: {
+        handler: "deleteBookById",
+        message: "Book deleted",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        timestamp: new Date().toISOString(),
+        data: book,
+      },
+    });
+  } catch (error) {
+    console.log(
+      `Error in 'deleteBookById' on request ${req.method} ${req.originalUrl}: `,
+      error
+    );
+    res.status(500).json({
+      error: {
+        handler: "deleteBookById",
+        message: "Error deleting book",
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+        errorMessage: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addBooks,
@@ -872,7 +1046,7 @@ module.exports = {
   getAllBooksFromGenre,
   updateGenreForAllBooksOfSpecificGenre,
   deleteAllBooksByGenre,
-  //   getBookById,
-  //   updateBookById,
-  //   deleteBookById,
+  getBookById,
+  dynamicallyUpdateById,
+  deleteBookById,
 };
