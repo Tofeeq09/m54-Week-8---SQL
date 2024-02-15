@@ -4,58 +4,29 @@ const Genre = require("./model"); // Import the Genre model from the model.js fi
 // Controller Functions - Define the route handlers.
 
 // POST /genres
-const addGenres = async (req, res) => {
+const addGenre = async (req, res) => {
   try {
-    if (Array.isArray(req.body)) {
-      const newGenres = await Genre.bulkCreate(
-        req.body.map((genre) => ({
-          genreName: genre.genreName,
-        }))
-      );
-      const genreNames = newGenres.map((genre) => genre.genreName).join(", ");
+    const { genre } = req.body;
 
-      res.status(201).json({
-        success: {
-          handler: "addGenres",
-          message: `Genres added: ${genreNames}`,
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-          data: newGenres,
-        },
-      });
-      return;
+    if (!genre) {
+      return res.status(400).json({ success: false, message: "Genre is required" });
     }
 
-    const newGenre = await Genre.create({
-      genreName: req.body.genreName,
-    });
-    res.status(201).json({
-      success: {
-        handler: "addGenres",
-        message: `Genre added: ${req.body.genreName}`,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: newGenre,
-      },
+    const genreExists = await Genre.findOne({ where: { genre: genre } });
+
+    if (genreExists) {
+      return res.status(400).json({ success: false, message: `Genre ${genre} already exists` });
+    }
+
+    const newGenre = await Genre.create({ genre });
+
+    return res.status(201).json({
+      success: true,
+      message: `${newGenre.genre} was added`,
+      data: { id: newGenre.id, genre: newGenre.genre },
     });
   } catch (error) {
-    console.log(
-      `Error in 'addGenres' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        handler: "addGenres",
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
+    return res.status(500).json({ success: false, message: "Error adding genre", error: error.errors });
   }
 };
 
@@ -96,10 +67,7 @@ const getAllOrQueryGenres = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(
-      `Error in 'getAllOrQueryGenres' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
+    console.log(`Error in 'getAllOrQueryGenres' on request ${req.method} ${req.originalUrl}: `, error);
     res.status(500).json({
       error: {
         method: req.method,
@@ -116,6 +84,6 @@ const getAllOrQueryGenres = async (req, res) => {
 
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
-  addGenres,
+  addGenre,
   getAllOrQueryGenres,
 };

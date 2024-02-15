@@ -8,13 +8,13 @@ const sequelize = require("../db/connection"); // Import the sequelize connectio
 const Author = sequelize.define(
   "Author",
   {
-    authorName: {
+    author: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
   },
-  { timestamps: false } // Additional options for the model: Disable timestamps.
+  { timestamps: false }
 );
 
 // Export the Author model so that it can be imported and used in controller.js.

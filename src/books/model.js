@@ -14,7 +14,7 @@ const Book = sequelize.define(
       allowNull: false,
     },
   },
-  { timestamps: false } // Additional options for the model: Disable timestamps.
+  { timestamps: false }
 );
 
 // Export the Book mongoose model so that it can be imported and used in controller.js.

@@ -8,13 +8,13 @@ const sequelize = require("../db/connection"); // Import the sequelize connectio
 const Genre = sequelize.define(
   "Genre",
   {
-    genreName: {
+    genre: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
   },
-  { timestamps: false } // Additional options for the model: Disable timestamps.
+  { timestamps: false }
 );
 
 // Export the Genre mongoose model so that it can be imported and used in controller.js.

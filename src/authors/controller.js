@@ -4,60 +4,29 @@ const Author = require("./model"); // Import the Author model from the model.js 
 // Controller Functions - Define the route handlers.
 
 // Add Authors - POST /authors
-const addAuthors = async (req, res) => {
+const addAuthor = async (req, res) => {
   try {
-    if (Array.isArray(req.body)) {
-      const newAuthors = await Author.bulkCreate(
-        req.body.map((author) => ({
-          authorName: author.authorName,
-        }))
-      );
-      const authorNames = newAuthors
-        .map((author) => author.authorName)
-        .join(", ");
+    const { author } = req.body;
 
-      res.status(201).json({
-        success: {
-          handler: "addAuthors",
-          message: `Authors added: ${authorNames}`,
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-          data: newAuthors,
-        },
-      });
-      return;
+    if (!author) {
+      return res.status(400).json({ success: false, message: "Author is required" });
     }
 
-    const newAuthor = await Author.create({
-      authorName: req.body.authorName,
-    });
-    res.status(201).json({
-      success: {
-        handler: "addAuthors",
-        message: `Author added: ${req.body.authorName}`,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: newAuthor,
-      },
+    const authorExists = await Author.findOne({ where: { author: author } });
+
+    if (authorExists) {
+      return res.status(400).json({ success: false, message: `Author ${author} already exists` });
+    }
+
+    const newAuthor = await Author.create({ author });
+
+    return res.status(201).json({
+      success: true,
+      message: `${newAuthor.author} was added`,
+      data: { id: newAuthor.id, author: newAuthor.author },
     });
   } catch (error) {
-    console.log(
-      `Error in 'addAuthors' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        handler: "addAuthors",
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
+    return res.status(500).json({ success: false, message: "Error adding author", error: error.errors });
   }
 };
 
@@ -98,10 +67,7 @@ const getAllOrQueryAuthors = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(
-      `Error in 'getAllOrQueryAuthors' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
+    console.log(`Error in 'getAllOrQueryAuthors' on request ${req.method} ${req.originalUrl}: `, error);
     res.status(500).json({
       error: {
         method: req.method,
@@ -118,6 +84,6 @@ const getAllOrQueryAuthors = async (req, res) => {
 
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
-  addAuthors,
+  addAuthor,
   getAllOrQueryAuthors,
 };
