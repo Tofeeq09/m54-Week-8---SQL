@@ -51,43 +51,32 @@ const getAllOrQueryBooks = async (req, res) => {
   try {
     const { title, author, genre } = req.query;
 
-    if (title) {
-      const titleExists = await Book.findOne({ where: { title: title } });
+    const query = {};
+    if (title) query.title = title;
 
-      if (!titleExists) {
-        return res.status(404).json({ success: false, message: `Title ${title} not found` });
-      }
-    }
+    const include = [
+      {
+        model: Author,
+        as: "Author",
+      },
+      {
+        model: Genre,
+        as: "Genre",
+      },
+    ];
 
     if (author) {
-      const authorExists = await Author.findOne({ where: { author: author } });
-
-      if (!authorExists) {
-        return res.status(404).json({ success: false, message: `Author ${author} not found` });
-      }
+      include[0].where = { author };
     }
 
     if (genre) {
-      const genreExists = await Genre.findOne({ where: { genre: genre } });
-
-      if (!genreExists) {
-        return res.status(404).json({ success: false, message: `Genre ${genre} not found` });
-      }
+      include[1].where = { genre };
     }
 
     const books = await Book.findAll({
-      where: req.query,
+      where: query,
       attributes: { exclude: ["GenreId", "AuthorId"] },
-      include: [
-        {
-          model: Author,
-          as: "Author",
-        },
-        {
-          model: Genre,
-          as: "Genre",
-        },
-      ],
+      include: include,
     });
 
     if (!books.length) {
@@ -112,8 +101,8 @@ const getAllOrQueryBooks = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: message,
+      query: req.query,
       data: {
-        query: req.query,
         books: formattedBooks,
       },
     });
@@ -167,6 +156,7 @@ const deleteAllBooks = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `${result} books deleted. The database is now empty.`,
+      query: req.query,
       data: { deletedCount: result, deletedBooks: booksToDelete },
     });
   } catch (error) {
