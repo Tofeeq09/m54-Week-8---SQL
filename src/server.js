@@ -9,6 +9,7 @@ const genreRouter = require("./genres/routes"); // From the genres/routes.js fil
 const Genre = require("./genres/model"); // From the genres/model.js file.
 const authorRouter = require("./authors/routes"); // From the authors/routes.js file.
 const Author = require("./authors/model"); // From the authors/model.js file.
+const sequelize = require("./db/connection"); // Import the sequelize connection from the connection.js file.
 
 // port - The port number on which the server will run or the default port number 5000.
 const app = express();
@@ -27,23 +28,15 @@ app.use("/authors", authorRouter);
 // A async function to sync the tables in the database.
 const syncTables = async () => {
   // Define relationships between the tables.
-  Genre.hasOne(Book);
-  Book.belongsTo(Genre);
-  Book.hasMany(Genre);
-
-  Author.hasOne(Book);
+  Author.hasMany(Book);
   Book.belongsTo(Author);
-  Book.hasMany(Author);
 
-  Genre.sync();
-  Author.sync();
-  Book.sync();
+  Genre.hasMany(Book);
+  Book.belongsTo(Genre);
 
   // The sync() method in Sequelize is used to synchronize all defined models to the database.
   // When called on a specific model like Book, it creates the table if it doesn't exist, and does nothing if it already exists.
-  await Book.sync();
-  await Genre.sync();
-  await Author.sync();
+  await sequelize.sync();
 };
 
 // The health check endpoint to check if the server is running.

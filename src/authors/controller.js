@@ -49,11 +49,11 @@ const addAuthors = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "addAuthors",
-        message: "Error adding authors",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "addAuthors",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -104,11 +104,11 @@ const getAllOrQueryAuthors = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "getAllOrQueryAuthors",
-        message: "Error fetching authors",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "getAllOrQueryAuthors",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },

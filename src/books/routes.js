@@ -13,17 +13,6 @@ const {
   getBookByTitle,
   dynamicallyUpdateByTitle,
   deleteBookByTitle,
-  getAllAuthors,
-  getAllBooksFromAuthor,
-  updateAuthorForAllBooksOfSpecificAuthor,
-  deleteAllBooksByAuthor,
-  getAllGenres,
-  getAllBooksFromGenre,
-  updateGenreForAllBooksOfSpecificGenre,
-  deleteAllBooksByGenre,
-  getBookById,
-  dynamicallyUpdateById,
-  deleteBookById,
 } = require("./controller"); //Controller Functions from controller.js
 
 // Controller Functions - Define the route handlers.
@@ -34,17 +23,6 @@ bookRouter.get("/title", getAllTitles);
 bookRouter.get("/title/:title", getBookByTitle);
 bookRouter.put("/title/:title", dynamicallyUpdateByTitle);
 bookRouter.delete("/title/:title", deleteBookByTitle);
-bookRouter.get("/author", getAllAuthors);
-bookRouter.get("/author/:author", getAllBooksFromAuthor);
-bookRouter.put("/author/:author", updateAuthorForAllBooksOfSpecificAuthor);
-bookRouter.delete("/author/:author", deleteAllBooksByAuthor);
-bookRouter.get("/genre", getAllGenres);
-bookRouter.get("/genre/:genre", getAllBooksFromGenre);
-bookRouter.put("/genre/:genre", updateGenreForAllBooksOfSpecificGenre);
-bookRouter.delete("/genre/:genre", deleteAllBooksByGenre);
-bookRouter.get("/:id", getBookById);
-bookRouter.put("/:id", dynamicallyUpdateById);
-bookRouter.delete("/:id", deleteBookById);
 
 // Export the bookRouter object so it can be imported and used in server.js.
 module.exports = bookRouter;

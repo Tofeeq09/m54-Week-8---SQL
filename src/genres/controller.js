@@ -47,11 +47,11 @@ const addGenres = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "addGenres",
-        message: "Error adding genres",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "addGenres",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -102,11 +102,11 @@ const getAllOrQueryGenres = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "getAllOrQueryGenres",
-        message: "Error fetching genres",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "getAllOrQueryGenres",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },

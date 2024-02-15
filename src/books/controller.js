@@ -1,19 +1,51 @@
 // Internal Module Imports - From files within the project.
 const Book = require("./model"); // Import the Book model from the model.js file.
+const Author = require("../authors/model"); // Import the Author model from the model.js file.
+const Genre = require("../genres/model"); // Import the Genre model from the model.js file.
 
 // Controller Functions - Define the route handlers.
 
 const addBooks = async (req, res) => {
   try {
+    const findAuthor = async (name) => {
+      const author = await Author.findOne({ where: { name } });
+      if (!author) throw new Error(`Author not found: ${name}`);
+      author.id;
+      return;
+    };
+
+    const findGenre = async (name) => {
+      const genre = await Genre.findOne({ where: { name } });
+      if (!genre) throw new Error(`Genre not found: ${name}`);
+      genre.id;
+      return;
+    };
+
     if (Array.isArray(req.body)) {
       const newBooks = await Book.bulkCreate(
-        req.body.map((book) => ({
-          title: book.title,
-          AuthorId: book.AuthorId,
-          GenreId: book.GenreId,
-        }))
+        await Promise.all(
+          req.body.map(async (book) => ({
+            title: book.title,
+            AuthorId: await findAuthor(book.author),
+            GenreId: await findGenre(book.genre),
+          }))
+        )
       );
       const bookTitles = newBooks.map((book) => book.title).join(", ");
+
+      const booksWithDetails = await Book.findAll({
+        where: { id: newBooks.map((book) => book.id) },
+        include: [
+          {
+            model: Author,
+            as: "Author",
+          },
+          {
+            model: Genre,
+            as: "Genre",
+          },
+        ],
+      });
 
       res.status(201).json({
         success: {
@@ -22,7 +54,7 @@ const addBooks = async (req, res) => {
           method: req.method,
           url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
           timestamp: new Date().toISOString(),
-          data: newBooks,
+          data: booksWithDetails,
         },
       });
       return;
@@ -30,9 +62,24 @@ const addBooks = async (req, res) => {
 
     const newBook = await Book.create({
       title: req.body.title,
-      AuthorId: req.body.AuthorId,
-      GenreId: req.body.GenreId,
+      AuthorId: await findAuthor(req.body.author),
+      GenreId: await findGenre(req.body.genre),
     });
+
+    const bookWithDetails = await Book.findOne({
+      where: { id: newBook.id },
+      include: [
+        {
+          model: Author,
+          as: "Author",
+        },
+        {
+          model: Genre,
+          as: "Genre",
+        },
+      ],
+    });
+
     res.status(201).json({
       success: {
         handler: "addBooks",
@@ -40,7 +87,7 @@ const addBooks = async (req, res) => {
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
         timestamp: new Date().toISOString(),
-        data: newBook,
+        data: bookWithDetails,
       },
     });
   } catch (error) {
@@ -50,11 +97,11 @@ const addBooks = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "addBooks",
-        message: "Error adding books",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "addBooks",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -67,7 +114,16 @@ const getAllOrQueryBooks = async (req, res) => {
     const books = await Book.findAll({
       where: req.query,
       attributes: { exclude: ["GenreId", "AuthorId"] },
-      include: ["Author", "Genre"],
+      include: [
+        {
+          model: Author,
+          as: "Author",
+        },
+        {
+          model: Genre,
+          as: "Genre",
+        },
+      ],
     });
 
     if (!books.length) {
@@ -108,11 +164,11 @@ const getAllOrQueryBooks = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "getAllOrQueryBooks",
-        message: "Error fetching books",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "getAllOrQueryBooks",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -153,16 +209,15 @@ const deleteAllBooks = async (req, res) => {
       error
     );
     res.status(500).json({
-      message: {
-        handler: "deleteAllBooks",
-        message: "Error deleting books",
+      error: {
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "deleteAllBooks",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
-      error: error,
     });
   }
 };
@@ -204,11 +259,11 @@ const getAllTitles = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "getAllTitles",
-        message: "Error getting titles",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "getAllTitles",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -248,11 +303,11 @@ const getBookByTitle = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "getBookByTitle",
-        message: "Error getting book",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "getBookByTitle",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -284,8 +339,8 @@ const dynamicallyUpdateByTitle = async (req, res) => {
     await Book.update(
       {
         title: req.body.title,
-        author: req.body.author,
-        genre: req.body.genre,
+        AuthorId: req.body.AuthorId,
+        GenreId: req.body.GenreId,
       },
       {
         where: { title: req.params.title },
@@ -337,11 +392,11 @@ const dynamicallyUpdateByTitle = async (req, res) => {
     );
     res.status(500).json({
       error: {
-        handler: "dynamicallyUpdateByTitle",
-        message: "Error updating book",
         method: req.method,
         url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        handler: "dynamicallyUpdateByTitle",
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -390,644 +445,11 @@ const deleteBookByTitle = async (req, res) => {
     console.log("Error deleting book: ", error);
     res.status(500).json({
       error: {
+        method: req.method,
+        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
         handler: "deleteBookByTitle",
-        message: "Error deleting book",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const getAllAuthors = async (req, res) => {
-  try {
-    const books = await Book.findAll({
-      attributes: ["author"],
-      group: "author",
-    });
-    const authors = books.map((book) => book.author);
-
-    if (!authors.length) {
-      res.status(404).json({
-        error: {
-          handler: "getAllAuthors",
-          message: "No authors found",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-    res.status(200).json({
-      success: {
-        handler: "getAllAuthors",
-        message: "Authors retrieved successfully",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: authors,
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'getAllAuthors' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "getAllAuthors",
-        message: "Error getting authors",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const getAllBooksFromAuthor = async (req, res) => {
-  try {
-    const books = await Book.findAll({ where: { author: req.params.author } });
-
-    if (books.length === 0) {
-      res.status(404).json({
-        error: {
-          handler: "getAllBooksFromAuthor",
-          message: "No books found from this author",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: {
-        handler: "getAllBooksFromAuthor",
-        message: "Books retrieved successfully",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: books,
-      },
-    });
-  } catch (error) {
-    console.log("Error retrieving books: ", error);
-    res.status(500).json({
-      error: {
-        handler: "getAllBooksFromAuthor",
-        message: "Error retrieving books",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const updateAuthorForAllBooksOfSpecificAuthor = async (req, res) => {
-  try {
-    // Fetch the current state of the book
-    const currentBooks = await Book.findAll({
-      where: { author: req.params.author },
-    });
-
-    if (!currentBooks.length) {
-      res.status(404).json({
-        error: {
-          handler: "updateAuthorNameForAllBooks",
-          message: "No books found from this author",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    // Perform the update
-    await Book.update(
-      { author: req.body.author },
-      { where: { author: req.params.author } }
-    );
-
-    // Fetch the updated state of the book
-    const updatedBooks = await Book.findAll({
-      where: { author: req.body.author },
-    });
-
-    const fieldsToCheck = ["author"];
-    if (
-      fieldsToCheck.every(
-        (field) => currentBooks[0][field] === updatedBooks[0][field]
-      )
-    ) {
-      res.status(304).json({
-        error: {
-          handler: "updateAuthorNameForAllBooks",
-          message: "No changes detected. Books not updated.",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-          data: {
-            oldAuthor: req.params.genre,
-            newAuthor: req.body.genre,
-          },
-        },
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: {
-        handler: "updateAuthorNameForAllBooks",
-        message: `${updatedBooks.length} books updated`,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: {
-          oldAuthor: req.params.author,
-          newAuthor: req.body.author,
-          booksUpdated: updatedBooks.map((book) => book.title),
-          booksUpdated: updatedBooks.map((book) => book.title),
-        },
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'updateAuthorNameForAllBooks' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "updateAuthorNameForAllBooks",
-        message: "Error updating books",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const deleteAllBooksByAuthor = async (req, res) => {
-  try {
-    const booksToDelete = await Book.findAll({
-      where: {
-        author: req.params.author,
-      },
-    });
-
-    if (!booksToDelete.length) {
-      res.status(404).json({
-        error: {
-          handler: "deleteAllBooksByAuthor",
-          message: "No books found from this author",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    await Book.destroy({
-      where: {
-        author: req.params.author,
-      },
-    });
-
-    res.status(200).json({
-      success: {
-        handler: "deleteAllBooksByAuthor",
-        message: `${booksToDelete.length} books deleted`,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: booksToDelete,
-      },
-    });
-  } catch (error) {
-    console.log("Error deleting books: ", error);
-    res.status(500).json({
-      error: {
-        handler: "deleteAllBooksByAuthor",
-        message: "Error deleting books",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-const getAllGenres = async (req, res) => {
-  try {
-    const books = await Book.findAll({
-      attributes: ["genre"],
-      group: "genre",
-    });
-    const genres = books.map((book) => book.genre);
-
-    if (!genres.length) {
-      res.status(404).json({
-        error: {
-          handler: "getAllGenres",
-          message: "No genres found",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-    res.status(200).json({
-      success: {
-        handler: "getAllGenres",
-        message: "Genres retrieved successfully",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: genres,
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'getAllGenres' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "getAllGenres",
-        message: "Error getting genres",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const getAllBooksFromGenre = async (req, res) => {
-  try {
-    const books = await Book.findAll({ where: { genre: req.params.genre } });
-
-    if (books.length === 0) {
-      res.status(404).json({
-        error: {
-          handler: "getAllBooksFromGenre",
-          message: "No books found for this genre",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: {
-        handler: "getAllBooksFromGenre",
-        message: "Books retrieved successfully",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: books,
-      },
-    });
-  } catch (error) {
-    console.log("Error retrieving books: ", error);
-    res.status(500).json({
-      error: {
-        handler: "getAllBooksFromGenre",
-        message: "Error retrieving books",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const deleteAllBooksByGenre = async (req, res) => {
-  try {
-    const booksToDelete = await Book.findAll({
-      where: {
-        genre: req.params.genre,
-      },
-    });
-
-    if (!booksToDelete.length) {
-      res.status(404).json({
-        error: {
-          handler: "deleteAllBooksByGenre",
-          message: "No books found for this genre",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    await Book.destroy({
-      where: {
-        genre: req.params.genre,
-      },
-    });
-
-    res.status(200).json({
-      success: {
-        handler: "deleteAllBooksByGenre",
-        message: `${booksToDelete.length} books deleted`,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: booksToDelete,
-      },
-    });
-  } catch (error) {
-    console.log("Error deleting books: ", error);
-    res.status(500).json({
-      error: {
-        handler: "deleteAllBooksByGenre",
-        message: "Error deleting books",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const updateGenreForAllBooksOfSpecificGenre = async (req, res) => {
-  try {
-    // Fetch the current state of the book
-    const currentBooks = await Book.findAll({
-      where: { genre: req.params.genre },
-    });
-
-    if (!currentBooks.length) {
-      res.status(404).json({
-        error: {
-          handler: "updateGenreForAllBooks",
-          message: "No books found from this genre",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    // Perform the update
-    await Book.update(
-      { genre: req.body.genre },
-      { where: { genre: req.params.genre } }
-    );
-
-    // Fetch the updated state of the book
-    const updatedBooks = await Book.findAll({
-      where: { genre: req.body.genre },
-    });
-
-    const fieldsToCheck = ["genre"];
-    if (
-      fieldsToCheck.every(
-        (field) => currentBooks[0][field] === updatedBooks[0][field]
-      )
-    ) {
-      res.status(304).json({
-        error: {
-          handler: "updateGenreForAllBooks",
-          message: "No changes detected. Books not updated.",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-          data: {
-            oldGenre: req.params.genre,
-            newGenre: req.body.genre,
-          },
-        },
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: {
-        handler: "updateGenreForAllBooks",
-        message: `${updatedBooks.length} books updated`,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: {
-          oldGenre: req.params.genre,
-          newGenre: req.body.genre,
-          booksUpdated: updatedBooks.map((book) => book.title),
-        },
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'updateGenreForAllBooks' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "updateGenreForAllBooks",
-        message: "Error updating books",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const getBookById = async (req, res) => {
-  try {
-    const book = await Book.findOne({ where: { id: req.params.id } });
-    if (!book) {
-      res.status(404).json({
-        error: {
-          handler: "getBookById",
-          message: "No book found with this id",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-    res.status(200).json({
-      success: {
-        handler: "getBookById",
-        message: "Book found",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: book,
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'getBookById' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "getBookById",
-        message: "Error getting book",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const dynamicallyUpdateById = async (req, res) => {
-  try {
-    // Fetch the current state of the book
-    const currentBook = await Book.findOne({
-      where: { id: req.params.id },
-    });
-
-    if (!currentBook) {
-      res.status(404).json({
-        error: {
-          handler: "dynamicallyUpdateById",
-          message: "Book not found",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    // Perform the update
-    await Book.update(req.body, {
-      where: { id: req.params.id },
-    });
-
-    // Fetch the updated state of the book
-    const updatedBook = await Book.findOne({
-      where: { id: req.params.id },
-    });
-
-    const fieldsToCheck = ["title", "author", "genre"];
-    if (
-      fieldsToCheck.every((field) => currentBook[field] === updatedBook[field])
-    ) {
-      res.status(304).json({
-        error: {
-          handler: "dynamicallyUpdateById",
-          message: "No changes detected. Book not updated.",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-          data: {
-            beforeUpdate: currentBook,
-            afterUpdate: updatedBook,
-          },
-        },
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: {
-        handler: "dynamicallyUpdateById",
-        message: "Book updated successfully",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: {
-          beforeUpdate: currentBook,
-          afterUpdate: updatedBook,
-        },
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'dynamicallyUpdateById' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "dynamicallyUpdateById",
-        message: "Error updating book",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-const deleteBookById = async (req, res) => {
-  try {
-    const book = await Book.findOne({ where: { id: req.params.id } });
-    if (!book) {
-      res.status(404).json({
-        error: {
-          handler: "deleteBookById",
-          message: "No book found with this id",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-    await book.destroy();
-    res.status(200).json({
-      success: {
-        handler: "deleteBookById",
-        message: "Book deleted",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: book,
-      },
-    });
-  } catch (error) {
-    console.log(
-      `Error in 'deleteBookById' on request ${req.method} ${req.originalUrl}: `,
-      error
-    );
-    res.status(500).json({
-      error: {
-        handler: "deleteBookById",
-        message: "Error deleting book",
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        errorMessage: error.message,
+        name: error.name,
+        message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
       },
@@ -1044,15 +466,4 @@ module.exports = {
   getBookByTitle,
   dynamicallyUpdateByTitle,
   deleteBookByTitle,
-  getAllAuthors,
-  getAllBooksFromAuthor,
-  updateAuthorForAllBooksOfSpecificAuthor,
-  deleteAllBooksByAuthor,
-  getAllGenres,
-  getAllBooksFromGenre,
-  updateGenreForAllBooksOfSpecificGenre,
-  deleteAllBooksByGenre,
-  getBookById,
-  dynamicallyUpdateById,
-  deleteBookById,
 };
