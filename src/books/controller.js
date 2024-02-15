@@ -32,8 +32,7 @@ const addBooks = async (req, res) => {
     const authorExists = await Author.findOne({ where: { author: author } });
 
     if (!authorExists) {
-      await Author.create({ author: author });
-      return res.status(201).json({ success: false, message: `Author ${author} not found. Author added` });
+      return await Author.create({ author: author });
     }
 
     const book = await Book.create({ title, GenreId: genreExists.id, AuthorId: authorExists.id });
