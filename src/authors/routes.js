@@ -5,11 +5,11 @@ const { Router } = require("express");
 const authorRouter = Router(); // Returns a new router object.
 
 // Internal Module Imports - From files within the project.
-const { addAuthor, getAllOrQueryAuthors } = require("./controller"); //Controller Functions from controller.js
+const { addAuthor, getAllAuthors } = require("./controller"); //Controller Functions from controller.js
 
 // Controller Functions - Define the route handlers.
 authorRouter.post("/", addAuthor);
-authorRouter.get("/", getAllOrQueryAuthors);
+authorRouter.get("/", getAllAuthors);
 
 // Export the authorRouter object so it can be imported and used in server.js.
 module.exports = authorRouter;

@@ -1,4 +1,6 @@
 // Internal Module Imports - From files within the project.
+const Book = require("../books/model"); // Import the Book model from the model.js file.
+const Author = require("../authors/model"); // Import the Author model from the model.js file.
 const Genre = require("./model"); // Import the Genre model from the model.js file.
 
 // Controller Functions - Define the route handlers.
@@ -30,54 +32,54 @@ const addGenre = async (req, res) => {
   }
 };
 
-// GET /genres
-const getAllOrQueryGenres = async (req, res) => {
+const getAllGenres = async (req, res) => {
   try {
     const genres = await Genre.findAll({ where: req.query });
 
     if (!genres.length) {
-      res.status(404).json({
-        error: {
-          handler: "getAllOrQueryGenres",
-          message: "No genres found",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
+      return res.status(404).json({
+        success: false,
+        message: "No genres found",
       });
-      return;
     }
 
-    let message = "All genres";
-    if (Object.keys(req.query).length) {
-      message = "Filtered genres";
-    }
+    // Fetch books for each genre
+    const promises = genres.map(async (genre) => {
+      const books = await Book.findAll({
+        where: { GenreId: genre.id },
+        include: [
+          {
+            model: Author,
+            as: "Author",
+            attributes: ["author"],
+          },
+        ],
+      });
 
-    res.status(200).json({
-      success: {
-        handler: "getAllOrQueryGenres",
-        message: message,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: {
-          query: req.query,
-          genres: genres,
-        },
-      },
+      return {
+        id: genre.id,
+        genre: genre.genre,
+        books: books.map((book) => ({
+          title: book.title,
+          author: book.Author.author,
+          genre: genre.genre,
+        })),
+      };
+    });
+
+    const formattedGenres = await Promise.all(promises);
+
+    return res.status(200).json({
+      success: true,
+      message: "Genres fetched successfully",
+      data: formattedGenres,
     });
   } catch (error) {
-    console.log(`Error in 'getAllOrQueryGenres' on request ${req.method} ${req.originalUrl}: `, error);
-    res.status(500).json({
-      error: {
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        handler: "getAllOrQueryGenres",
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
+    console.error(error); // Log the error
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching genres",
+      error: error.errors,
     });
   }
 };
@@ -85,5 +87,5 @@ const getAllOrQueryGenres = async (req, res) => {
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addGenre,
-  getAllOrQueryGenres,
+  getAllGenres,
 };

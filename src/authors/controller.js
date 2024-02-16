@@ -1,5 +1,7 @@
 // Internal Module Imports - From files within the project.
+const Book = require("../books/model"); // Import the Book model from the model.js file.
 const Author = require("./model"); // Import the Author model from the model.js file.
+const Genre = require("../genres/model"); // Import the Genre model from the model.js file.
 
 // Controller Functions - Define the route handlers.
 
@@ -30,54 +32,55 @@ const addAuthor = async (req, res) => {
   }
 };
 
-// Get All or Query Authors - GET /authors
-const getAllOrQueryAuthors = async (req, res) => {
+const getAllAuthors = async (req, res) => {
   try {
-    const authors = await Author.findAll({ where: req.query });
+    const authors = await Author.findAll({
+      where: req.query,
+      include: [
+        {
+          model: Book,
+          as: "Books",
+          attributes: ["title"],
+          include: [
+            {
+              model: Genre,
+              as: "Genre",
+              attributes: ["genre"],
+            },
+          ],
+        },
+      ],
+    });
 
     if (!authors.length) {
-      res.status(404).json({
-        error: {
-          handler: "getAllOrQueryAuthors",
-          message: "No authors found",
-          method: req.method,
-          url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-          timestamp: new Date().toISOString(),
-        },
+      return res.status(404).json({
+        success: false,
+        message: "No authors found",
       });
-      return;
     }
 
-    let message = "All authors";
-    if (Object.keys(req.query).length) {
-      message = "Filtered authors";
-    }
+    // Format the response
+    const formattedAuthors = authors.map((author) => ({
+      id: author.id,
+      author: author.author,
+      books: author.Books.map((book) => ({
+        title: book.title,
+        genre: book.Genre.genre,
+        author: author.author,
+      })),
+    }));
 
-    res.status(200).json({
-      success: {
-        handler: "getAllOrQueryAuthors",
-        message: message,
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        timestamp: new Date().toISOString(),
-        data: {
-          query: req.query,
-          authors: authors,
-        },
-      },
+    return res.status(200).json({
+      success: true,
+      message: "Authors fetched successfully",
+      data: formattedAuthors,
     });
   } catch (error) {
-    console.log(`Error in 'getAllOrQueryAuthors' on request ${req.method} ${req.originalUrl}: `, error);
-    res.status(500).json({
-      error: {
-        method: req.method,
-        url: `${req.protocol}://${req.get("host")}${req.originalUrl}`,
-        handler: "getAllOrQueryAuthors",
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      },
+    console.error(error); // Log the error
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching authors",
+      error: error.errors,
     });
   }
 };
@@ -85,5 +88,5 @@ const getAllOrQueryAuthors = async (req, res) => {
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addAuthor,
-  getAllOrQueryAuthors,
+  getAllAuthors,
 };

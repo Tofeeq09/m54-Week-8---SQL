@@ -20,9 +20,9 @@ bookRouter.post("/", addBooks);
 bookRouter.get("/", getAllOrQueryBooks);
 bookRouter.delete("/", deleteAllBooks);
 bookRouter.get("/title", getAllTitles);
-bookRouter.get("/title/:title", getBookByTitle);
-bookRouter.put("//:title", dynamicallyUpdateByTitle);
-bookRouter.delete("/title/:title", deleteBookByTitle);
+bookRouter.get("/:title", getBookByTitle);
+bookRouter.put("/:title", dynamicallyUpdateByTitle);
+bookRouter.delete("/:title", deleteBookByTitle);
 
 // Export the bookRouter object so it can be imported and used in server.js.
 module.exports = bookRouter;

@@ -5,11 +5,11 @@ const { Router } = require("express");
 const genreRouter = Router(); // Returns a new router object.
 
 // Internal Module Imports - From files within the project.
-const { addGenre, getAllOrQueryGenres } = require("./controller"); //Controller Functions from controller.js
+const { addGenre, getAllGenres } = require("./controller"); //Controller Functions from controller.js
 
 // Controller Functions - Define the route handlers.
 genreRouter.post("/", addGenre);
-genreRouter.get("/", getAllOrQueryGenres);
+genreRouter.get("/", getAllGenres);
 
 // Export the bookRouter object so it can be imported and used in server.js.
 module.exports = genreRouter;

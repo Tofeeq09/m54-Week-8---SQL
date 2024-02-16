@@ -51,8 +51,8 @@ const addBooks = async (req, res) => {
 const getAllOrQueryBooks = async (req, res) => {
   try {
     const { title, author, genre } = req.query;
-
     const query = {};
+
     if (title) query.title = title;
 
     const include = [
@@ -172,8 +172,10 @@ const getAllTitles = async (req, res) => {
 
 const getBookByTitle = async (req, res) => {
   try {
+    const { title } = req.params;
+
     const book = await Book.findOne({
-      where: { title: req.params.title },
+      where: title,
       attributes: { exclude: ["GenreId", "AuthorId"] },
       include: [
         {
