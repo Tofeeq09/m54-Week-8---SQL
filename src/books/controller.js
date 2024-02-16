@@ -96,13 +96,6 @@ const getAllOrQueryBooks = async (req, res) => {
       genre: book.Genre.genre,
     }));
 
-    const formattedBooks = books.map((book) => ({
-      id: book.id,
-      title: book.title,
-      author: book.Author.author,
-      genre: book.Genre.genre,
-    }));
-
     let message = "All books";
     if (Object.keys(req.query).length) {
       message = "Filtered books";
