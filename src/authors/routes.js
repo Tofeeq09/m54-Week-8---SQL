@@ -10,10 +10,10 @@ const { addAuthor, getAllAuthors, deleteAllAuthors, getAuthor, updateAuthor, del
 // Controller Functions - Define the route handlers.
 authorRouter.post("/", addAuthor);
 authorRouter.get("/", getAllAuthors);
-authorRouter.delete("/", deleteAllAuthors);
+// authorRouter.delete("/", deleteAllAuthors);
 authorRouter.get("/:author", getAuthor);
 authorRouter.put("/:author", updateAuthor);
-authorRouter.delete("/:author", deleteAuthor);
+// authorRouter.delete("/:author", deleteAuthor);
 
 // Export the authorRouter object so it can be imported and used in server.js.
 module.exports = authorRouter;

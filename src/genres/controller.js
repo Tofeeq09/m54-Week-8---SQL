@@ -84,19 +84,19 @@ const getAllGenres = async (req, res) => {
   }
 };
 
-const deleteAllGenres = async (req, res) => {
-  try {
-    const deletedGenres = await Genre.destroy({ where: {} });
+// const deleteAllGenres = async (req, res) => {
+//   try {
+//     const deletedGenres = await Genre.destroy({ where: {} });
 
-    if (!deletedGenres) {
-      return res.status(404).json({ success: false, message: "No genres found" });
-    }
+//     if (!deletedGenres) {
+//       return res.status(404).json({ success: false, message: "No genres found" });
+//     }
 
-    return res.status(200).json({ success: true, message: "All genres deleted successfully" });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Error deleting genres", error: error.errors });
-  }
-};
+//     return res.status(200).json({ success: true, message: "All genres deleted successfully" });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Error deleting genres", error: error.errors });
+//   }
+// };
 
 const getGenre = async (req, res) => {
   try {
@@ -181,27 +181,27 @@ const updateGenre = async (req, res) => {
   }
 };
 
-const deleteGenre = async (req, res) => {
-  try {
-    const { genre } = req.params;
-    const deletedGenre = await Genre.destroy({ where: { genre: genre } });
+// const deleteGenre = async (req, res) => {
+//   try {
+//     const { genre } = req.params;
+//     const deletedGenre = await Genre.destroy({ where: { genre: genre } });
 
-    if (!deletedGenre) {
-      return res.status(404).json({ success: false, message: "Genre not found" });
-    }
+//     if (!deletedGenre) {
+//       return res.status(404).json({ success: false, message: "Genre not found" });
+//     }
 
-    return res.status(200).json({ success: true, message: "Genre deleted successfully" });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Error deleting genre", error: error.errors });
-  }
-};
+//     return res.status(200).json({ success: true, message: "Genre deleted successfully" });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Error deleting genre", error: error.errors });
+//   }
+// };
 
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addGenre,
   getAllGenres,
-  deleteAllGenres,
+  // deleteAllGenres,
   getGenre,
   updateGenre,
-  deleteGenre,
+  // deleteGenre,
 };

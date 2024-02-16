@@ -85,19 +85,19 @@ const getAllAuthors = async (req, res) => {
   }
 };
 
-const deleteAllAuthors = async (req, res) => {
-  try {
-    const deletedAuthors = await Author.destroy({ where: {} });
+// const deleteAllAuthors = async (req, res) => {
+//   try {
+//     const deletedAuthors = await Author.destroy({ where: {} });
 
-    if (!deletedAuthors) {
-      return res.status(404).json({ success: false, message: "No authors found" });
-    }
+//     if (!deletedAuthors) {
+//       return res.status(404).json({ success: false, message: "No authors found" });
+//     }
 
-    return res.status(200).json({ success: true, message: "All authors deleted successfully" });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Error deleting authors", error: error.errors });
-  }
-};
+//     return res.status(200).json({ success: true, message: "All authors deleted successfully" });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Error deleting authors", error: error.errors });
+//   }
+// };
 
 const getAuthor = async (req, res) => {
   try {
@@ -188,27 +188,27 @@ const updateAuthor = async (req, res) => {
   }
 };
 
-const deleteAuthor = async (req, res) => {
-  try {
-    const { author } = req.params;
-    const deletedAuthor = await Author.destroy({ where: { author: author } });
+// const deleteAuthor = async (req, res) => {
+//   try {
+//     const { author } = req.params;
+//     const deletedAuthor = await Author.destroy({ where: { author: author } });
 
-    if (!deletedAuthor) {
-      return res.status(404).json({ success: false, message: "Author not found" });
-    }
+//     if (!deletedAuthor) {
+//       return res.status(404).json({ success: false, message: "Author not found" });
+//     }
 
-    return res.status(200).json({ success: true, message: "Author deleted successfully" });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Error deleting author", error: error.errors });
-  }
-};
+//     return res.status(200).json({ success: true, message: "Author deleted successfully" });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Error deleting author", error: error.errors });
+//   }
+// };
 
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addAuthor,
   getAllAuthors,
-  deleteAllAuthors,
+  // deleteAllAuthors,
   getAuthor,
   updateAuthor,
-  deleteAuthor,
+  // deleteAuthor,
 };

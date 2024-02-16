@@ -10,10 +10,10 @@ const { addGenre, getAllGenres, deleteAllGenres, getGenre, updateGenre, deleteGe
 // Controller Functions - Define the route handlers.
 genreRouter.post("/", addGenre);
 genreRouter.get("/", getAllGenres);
-genreRouter.delete("/", deleteAllGenres);
+// genreRouter.delete("/", deleteAllGenres);
 genreRouter.get("/:genre", getGenre);
 genreRouter.put("/:genre", updateGenre);
-genreRouter.delete("/:genre", deleteGenre);
+// genreRouter.delete("/:genre", deleteGenre);
 
 // Export the bookRouter object so it can be imported and used in server.js.
 module.exports = genreRouter;
