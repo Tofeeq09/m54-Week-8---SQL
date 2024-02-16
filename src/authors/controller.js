@@ -59,7 +59,6 @@ const getAllAuthors = async (req, res) => {
       });
     }
 
-    // Format the response
     const formattedAuthors = authors.map((author) => ({
       id: author.id,
       author: author.author,
@@ -85,8 +84,60 @@ const getAllAuthors = async (req, res) => {
   }
 };
 
+const updateAuthor = async (req, res) => {
+  try {
+    const { oldAuthorName } = req.params;
+    const { author: newAuthorName } = req.body;
+
+    if (!newAuthorName) {
+      return res.status(400).json({ success: false, message: "Invalid Author" });
+    }
+
+    const authorExists = await Author.findOne({ where: { author: oldAuthorName } });
+
+    if (!authorExists) {
+      return res.status(404).json({ success: false, message: `Author ${oldAuthorName} not found` });
+    }
+
+    const newAuthorExists = await Author.findOne({ where: { author: newAuthorName } });
+
+    if (newAuthorExists) {
+      return res.status(400).json({ success: false, message: `Author ${newAuthorName} already exists` });
+    }
+
+    await Author.update({ author: newAuthorName }, { where: { author: oldAuthorName } });
+
+    return res.status(200).json({
+      success: true,
+      message: "Author updated successfully",
+      oldAuthorName: oldAuthorName,
+      newAuthorName: newAuthorName,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Error updating author", error: error.errors });
+  }
+};
+
+const deleteAuthor = async (req, res) => {
+  try {
+    const { author } = req.params;
+    const deletedAuthor = await Author.destroy({ where: { author: author } });
+
+    if (!deletedAuthor) {
+      return res.status(404).json({ success: false, message: "Author not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Author deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error deleting author", error: error.errors });
+  }
+};
+
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addAuthor,
   getAllAuthors,
+  updateAuthor,
+  deleteAuthor,
 };

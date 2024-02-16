@@ -84,8 +84,59 @@ const getAllGenres = async (req, res) => {
   }
 };
 
+const updateGenre = async (req, res) => {
+  try {
+    const { oldGenreName } = req.params;
+    const { genre: newGenreName } = req.body; // Changed this line
+
+    if (!newGenreName) {
+      return res.status(400).json({ success: false, message: "Invalid Genre" });
+    }
+
+    const genreExists = await Genre.findOne({ where: { genre: oldGenreName } });
+
+    if (!genreExists) {
+      return res.status(404).json({ success: false, message: `Genre ${oldGenreName} not found` });
+    }
+
+    const newGenreExists = await Genre.findOne({ where: { genre: newGenreName } });
+
+    if (newGenreExists) {
+      return res.status(400).json({ success: false, message: `Genre ${newGenreName} already exists` });
+    }
+
+    await Genre.update({ genre: newGenreName }, { where: { genre: oldGenreName } });
+
+    return res.status(200).json({
+      success: true,
+      message: "Genre updated successfully",
+      oldGenreName: oldGenreName,
+      newGenreName: newGenreName,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error updating genre", error: error.errors });
+  }
+};
+
+const deleteGenre = async (req, res) => {
+  try {
+    const { genre } = req.params;
+    const deletedGenre = await Genre.destroy({ where: { genre: genre } });
+
+    if (!deletedGenre) {
+      return res.status(404).json({ success: false, message: "Genre not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Genre deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error deleting genre", error: error.errors });
+  }
+};
+
 // Export the controller functions as an object so they can be imported and used in routes.js.
 module.exports = {
   addGenre,
   getAllGenres,
+  updateGenre,
+  deleteGenre,
 };
