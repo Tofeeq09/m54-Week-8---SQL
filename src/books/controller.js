@@ -117,33 +117,7 @@ const getAllOrQueryBooks = async (req, res) => {
 
 const deleteAllBooks = async (req, res) => {
   try {
-    const { title, author, genre } = req.query;
-
-    if (title) {
-      const titleExists = await Book.findOne({ where: { title: title } });
-
-      if (!titleExists) {
-        return res.status(404).json({ success: false, message: `Title ${title} not found` });
-      }
-    }
-
-    if (author) {
-      const authorExists = await Author.findOne({ where: { author: author } });
-
-      if (!authorExists) {
-        return res.status(404).json({ success: false, message: `Author ${author} not found` });
-      }
-    }
-
-    if (genre) {
-      const genreExists = await Genre.findOne({ where: { genre: genre } });
-
-      if (!genreExists) {
-        return res.status(404).json({ success: false, message: `Genre ${genre} not found` });
-      }
-    }
-
-    const booksToDelete = await Book.findAll({ where: req.query });
+    const booksToDelete = await Book.findAll();
 
     if (booksToDelete.length === 0) {
       return res.status(204).json({
@@ -152,7 +126,7 @@ const deleteAllBooks = async (req, res) => {
       });
     }
 
-    const result = await Book.destroy({ where: req.query });
+    const result = await Book.destroy({ truncate: true });
     return res.status(200).json({
       success: true,
       message: `${result} books deleted. The database is now empty.`,
@@ -170,10 +144,8 @@ const deleteAllBooks = async (req, res) => {
 
 const getAllTitles = async (req, res) => {
   try {
-    const books = await Book.findAll({
-      attributes: ["title"],
-      group: "title",
-    });
+    const books = await Book.findAll();
+
     const titles = books.map((book) => book.title);
 
     if (!titles.length) {
@@ -221,10 +193,17 @@ const getBookByTitle = async (req, res) => {
       });
     }
 
+    const formattedBook = {
+      id: book.id,
+      title: book.title,
+      author: book.Author.author,
+      genre: book.Genre.genre,
+    };
+
     return res.status(200).json({
       success: true,
       message: "Book fetched successfully",
-      data: book,
+      data: formattedBook,
     });
   } catch (error) {
     return res.status(500).json({
