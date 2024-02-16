@@ -175,7 +175,7 @@ const getBookByTitle = async (req, res) => {
     const { title } = req.params;
 
     const book = await Book.findOne({
-      where: title,
+      where: { title: title },
       attributes: { exclude: ["GenreId", "AuthorId"] },
       include: [
         {
@@ -209,6 +209,7 @@ const getBookByTitle = async (req, res) => {
       data: formattedBook,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Error fetching book",
@@ -344,10 +345,8 @@ const deleteBookByTitle = async (req, res) => {
     });
 
     if (!booksToDelete) {
-      return res.status(404).json({
-        success: false,
-        message: "Book not found",
-      });
+      res.status(404).json({ success: false, message: "Book not found" });
+      return;
     }
 
     await Book.destroy({
@@ -357,10 +356,10 @@ const deleteBookByTitle = async (req, res) => {
     });
 
     const formattedBook = {
-      id: book.id,
-      title: book.title,
-      author: book.Author.author,
-      genre: book.Genre.genre,
+      id: booksToDelete.id,
+      title: booksToDelete.title,
+      author: booksToDelete.Author.author,
+      genre: booksToDelete.Genre.genre,
     };
 
     return res.status(200).json({
