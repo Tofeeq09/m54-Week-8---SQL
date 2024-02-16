@@ -10,7 +10,7 @@ const { addGenre, getAllGenres, deleteAllGenres, getGenre, updateGenre, deleteGe
 // Controller Functions - Define the route handlers.
 genreRouter.post("/", addGenre);
 genreRouter.get("/", getAllGenres);
-genreRouter.delete("/", deleteAllGenres);
+// genreRouter.delete("/", deleteAllGenres);
 genreRouter.get("/:genre", getGenre);
 genreRouter.put("/:genre", updateGenre);
 genreRouter.delete("/:genre", deleteGenre);
