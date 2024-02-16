@@ -27,6 +27,9 @@ const addBooks = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: `Genre ${genre} not found. Genre needs to already exist` });
+      return res
+        .status(404)
+        .json({ success: false, message: `Genre ${genre} not found. Genre needs to already exist` });
     }
 
     const authorExists = await Author.findOne({ where: { author: author } });
@@ -93,6 +96,13 @@ const getAllOrQueryBooks = async (req, res) => {
       genre: book.Genre.genre,
     }));
 
+    const formattedBooks = books.map((book) => ({
+      id: book.id,
+      title: book.title,
+      author: book.Author.author,
+      genre: book.Genre.genre,
+    }));
+
     let message = "All books";
     if (Object.keys(req.query).length) {
       message = "Filtered books";
@@ -103,6 +113,8 @@ const getAllOrQueryBooks = async (req, res) => {
       message: message,
       query: req.query,
       data: {
+        books: formattedBooks,
+        query: req.query,
         books: formattedBooks,
       },
     });
