@@ -30,13 +30,16 @@ const syncTables = async () => {
   // Define relationships between the tables.
   Author.hasMany(Book);
   Book.belongsTo(Author);
-
   Genre.hasMany(Book);
   Book.belongsTo(Genre);
 
+  await Author.sync();
+  await Genre.sync();
+  await Book.sync();
+
   // The sync() method in Sequelize is used to synchronize all defined models to the database.
   // When called on a specific model like Book, it creates the table if it doesn't exist, and does nothing if it already exists.
-  await sequelize.sync();
+  // await sequelize.sync(); // sequelize.sync() - is equivalent to Book.sync() and Author.sync() and Genre.sync() but it syncs all the tables at once.
 };
 
 // The health check endpoint to check if the server is running.

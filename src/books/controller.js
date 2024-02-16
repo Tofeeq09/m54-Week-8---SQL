@@ -203,7 +203,7 @@ const getBookByTitle = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Book fetched successfully",
+      message: "Single book fetched successfully",
       data: formattedBook,
     });
   } catch (error) {
@@ -274,13 +274,21 @@ const dynamicallyUpdateByTitle = async (req, res) => {
 
 const deleteBookByTitle = async (req, res) => {
   try {
-    const booksToDelete = await Book.findAll({
-      where: {
-        title: req.params.title,
-      },
+    const booksToDelete = await Book.findOne({
+      where: { title: req.params.title },
+      include: [
+        {
+          model: Author,
+          as: "Author",
+        },
+        {
+          model: Genre,
+          as: "Genre",
+        },
+      ],
     });
 
-    if (!booksToDelete.length) {
+    if (!booksToDelete) {
       return res.status(404).json({
         success: false,
         message: "Book not found",
@@ -293,10 +301,17 @@ const deleteBookByTitle = async (req, res) => {
       },
     });
 
+    const formattedBook = {
+      id: book.id,
+      title: book.title,
+      author: book.Author.author,
+      genre: book.Genre.genre,
+    };
+
     return res.status(200).json({
       success: true,
-      message: "Book successfully deleted",
-      data: booksToDelete,
+      message: "Single book deleted successfully",
+      data: formattedBook,
     });
   } catch (error) {
     return res.status(500).json({
