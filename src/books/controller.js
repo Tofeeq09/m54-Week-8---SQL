@@ -221,6 +221,16 @@ const dynamicallyUpdateByTitle = async (req, res) => {
   try {
     const currentBook = await Book.findOne({
       where: { title: req.params.title },
+      include: [
+        {
+          model: Author,
+          as: "Author",
+        },
+        {
+          model: Genre,
+          as: "Genre",
+        },
+      ],
     });
 
     if (!currentBook) {
@@ -230,11 +240,33 @@ const dynamicallyUpdateByTitle = async (req, res) => {
       });
     }
 
+    const { title, genre, author } = req.body;
+
+    let updatedGenreId = currentBook.GenreId;
+    let updatedAuthorId = currentBook.AuthorId;
+
+    // Check if the new genre exists in the Genre table
+    const existingGenre = await Genre.findOne({ where: { genre } });
+    if (!existingGenre) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid genre",
+      });
+    }
+    updatedGenreId = existingGenre.id;
+
+    // Check if the new author exists in the Author table
+    let existingAuthor = await Author.findOne({ where: { author } });
+    if (!existingAuthor) {
+      existingAuthor = await Author.create({ author });
+    }
+    updatedAuthorId = existingAuthor.id;
+
     await Book.update(
       {
-        title: req.body.title,
-        AuthorId: req.body.AuthorId,
-        GenreId: req.body.GenreId,
+        title,
+        GenreId: updatedGenreId,
+        AuthorId: updatedAuthorId,
       },
       {
         where: { title: req.params.title },
@@ -242,7 +274,17 @@ const dynamicallyUpdateByTitle = async (req, res) => {
     );
 
     const updatedBook = await Book.findOne({
-      where: { title: req.body.title },
+      where: { title },
+      include: [
+        {
+          model: Author,
+          as: "Author",
+        },
+        {
+          model: Genre,
+          as: "Genre",
+        },
+      ],
     });
 
     const fieldsToCheck = ["title", "author", "genre"];
@@ -261,11 +303,22 @@ const dynamicallyUpdateByTitle = async (req, res) => {
       success: true,
       message: "Book updated successfully",
       data: {
-        beforeUpdate: currentBook,
-        afterUpdate: updatedBook,
+        beforeUpdate: {
+          id: currentBook.id,
+          title: currentBook.title,
+          author: currentBook.Author.author,
+          genre: currentBook.Genre.genre,
+        },
+        afterUpdate: {
+          id: updatedBook.id,
+          title: updatedBook.title,
+          author: updatedBook.Author.author,
+          genre: updatedBook.Genre.genre,
+        },
       },
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Error updating book",
