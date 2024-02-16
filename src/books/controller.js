@@ -2,6 +2,7 @@
 const Book = require("./model"); // Import the Book model from the model.js file.
 const Author = require("../authors/model"); // Import the Author model from the model.js file.
 const Genre = require("../genres/model"); // Import the Genre model from the model.js file.
+const { where } = require("sequelize");
 
 // Controller Functions - Define the route handlers.
 
@@ -24,9 +25,6 @@ const addBooks = async (req, res) => {
     const genreExists = await Genre.findOne({ where: { genre: genre } });
 
     if (!genreExists) {
-      return res
-        .status(404)
-        .json({ success: false, message: `Genre ${genre} not found. Genre needs to already exist` });
       return res
         .status(404)
         .json({ success: false, message: `Genre ${genre} not found. Genre needs to already exist` });
@@ -107,8 +105,6 @@ const getAllOrQueryBooks = async (req, res) => {
       query: req.query,
       data: {
         books: formattedBooks,
-        query: req.query,
-        books: formattedBooks,
       },
     });
   } catch (error) {
@@ -127,14 +123,14 @@ const deleteAllBooks = async (req, res) => {
     if (booksToDelete.length === 0) {
       return res.status(204).json({
         success: false,
-        message: "No books found to delete. The database is already empty.",
+        message: "No books found to delete.",
       });
     }
 
-    const result = await Book.destroy({ truncate: true });
+    const result = await Book.destroy({ where: {} });
     return res.status(200).json({
       success: true,
-      message: `${result} books deleted. The database is now empty.`,
+      message: `${result} books deleted.`,
       query: req.query,
       data: { deletedCount: result, deletedBooks: booksToDelete },
     });
