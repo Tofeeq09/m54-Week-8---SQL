@@ -28,6 +28,7 @@ const addAuthor = async (req, res) => {
       data: { id: newAuthor.id, author: newAuthor.author },
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ success: false, message: "Error adding author", error: error.errors });
   }
 };
@@ -79,6 +80,74 @@ const getAllAuthors = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error fetching authors",
+      error: error.errors,
+    });
+  }
+};
+
+const deleteAllAuthors = async (req, res) => {
+  try {
+    const deletedAuthors = await Author.destroy({ where: {} });
+
+    if (!deletedAuthors) {
+      return res.status(404).json({ success: false, message: "No authors found" });
+    }
+
+    return res.status(200).json({ success: true, message: "All authors deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error deleting authors", error: error.errors });
+  }
+};
+
+const getAuthor = async (req, res) => {
+  try {
+    const { author } = req.params;
+
+    const authorDetails = await Author.findOne({
+      where: { author: author },
+      include: [
+        {
+          model: Book,
+          as: "Books",
+          attributes: ["title"],
+          include: [
+            {
+              model: Genre,
+              as: "Genre",
+              attributes: ["genre"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!authorDetails) {
+      return res.status(404).json({
+        success: false,
+        message: `Author ${author} not found`,
+      });
+    }
+
+    const formattedAuthor = {
+      id: authorDetails.id,
+      author: authorDetails.author,
+      books: authorDetails.Books.map((book) => ({
+        title: book.title,
+        author: authorDetails.author,
+        genre: book.Genre.genre,
+      })),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Author fetched successfully",
+      data: formattedAuthor,
+    });
+  } catch (error) {
+    console.error(error); // Log the error
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching author",
       error: error.errors,
     });
   }
@@ -138,6 +207,8 @@ const deleteAuthor = async (req, res) => {
 module.exports = {
   addAuthor,
   getAllAuthors,
+  deleteAllAuthors,
+  getAuthor,
   updateAuthor,
   deleteAuthor,
 };

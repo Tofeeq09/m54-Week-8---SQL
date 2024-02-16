@@ -84,6 +84,69 @@ const getAllGenres = async (req, res) => {
   }
 };
 
+const deleteAllGenres = async (req, res) => {
+  try {
+    const deletedGenres = await Genre.destroy({ where: {} });
+
+    if (!deletedGenres) {
+      return res.status(404).json({ success: false, message: "No genres found" });
+    }
+
+    return res.status(200).json({ success: true, message: "All genres deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error deleting genres", error: error.errors });
+  }
+};
+
+const getGenre = async (req, res) => {
+  try {
+    const { genre } = req.params;
+
+    const genreDetails = await Genre.findOne({
+      where: { genre: genre },
+      include: [
+        {
+          model: Book,
+          as: "Books",
+          attributes: ["title"],
+          include: [
+            {
+              model: Author,
+              as: "Author",
+              attributes: ["author"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!genreDetails) {
+      return res.status(404).json({
+        success: false,
+        message: `Genre ${genre} not found`,
+      });
+    }
+
+    const formattedGenre = {
+      id: genreDetails.id,
+      genre: genreDetails.genre,
+      books: genreDetails.Books.map((book) => ({
+        title: book.title,
+        author: book.Author.author,
+        genre: genreDetails.genre,
+      })),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Genre fetched successfully",
+      data: formattedGenre,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error fetching genre", error: error.errors });
+  }
+};
+
 const updateGenre = async (req, res) => {
   try {
     const { oldGenreName } = req.params;
@@ -137,6 +200,8 @@ const deleteGenre = async (req, res) => {
 module.exports = {
   addGenre,
   getAllGenres,
+  deleteAllGenres,
+  getGenre,
   updateGenre,
   deleteGenre,
 };
