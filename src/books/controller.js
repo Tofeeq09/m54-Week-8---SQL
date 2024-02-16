@@ -216,7 +216,6 @@ const getBookByTitle = async (req, res) => {
 
 const dynamicallyUpdateByTitle = async (req, res) => {
   try {
-    // Fetch the current state of the book
     const currentBook = await Book.findOne({
       where: { title: req.params.title },
     });
@@ -228,7 +227,6 @@ const dynamicallyUpdateByTitle = async (req, res) => {
       });
     }
 
-    // Perform the update
     await Book.update(
       {
         title: req.body.title,
@@ -240,7 +238,6 @@ const dynamicallyUpdateByTitle = async (req, res) => {
       }
     );
 
-    // Fetch the updated state of the book
     const updatedBook = await Book.findOne({
       where: { title: req.body.title },
     });
