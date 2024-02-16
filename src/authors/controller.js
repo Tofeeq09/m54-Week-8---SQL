@@ -208,6 +208,7 @@ module.exports = {
   addAuthor,
   getAllAuthors,
   deleteAllAuthors,
+  getAuthor,
   updateAuthor,
   deleteAuthor,
 };
