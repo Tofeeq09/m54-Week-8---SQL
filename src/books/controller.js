@@ -1,5 +1,5 @@
 // Internal Module Imports - From files within the project.
-
+const Book = require("../books/model"); // Import the Book model from the model.js file.
 const Author = require("../authors/model"); // Import the Author model from the model.js file.
 const Genre = require("../genres/model"); // Import the Genre model from the model.js file.
 
